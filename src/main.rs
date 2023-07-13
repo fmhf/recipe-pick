@@ -194,7 +194,8 @@ fn generate_picklist(recipes: &[Recipe]) -> anyhow::Result<()> {
     }
     wtr.flush()?;
 
-    pb.finish_with_message(format!("Picklist generated: {}", file_name.green()));
+    pb.finish();
+    println!("Picklist generated: {}", file_name.green());
 
     Ok(())
 }
