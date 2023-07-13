@@ -158,9 +158,8 @@ async fn get_picklists(
 }
 
 fn generate_picklist(recipes: &[Recipe]) -> anyhow::Result<()> {
-    let pb = indicatif::ProgressBar::new_spinner();
+    let pb = indicatif::ProgressBar::new(recipes.len() as u64);
     pb.println("Generating picklist...");
-    pb.set_length(recipes.len() as u64);
 
     let file_name = format!("{}_picklists.csv", &Ulid::new().to_string());
     let mut wtr = csv::Writer::from_path(&file_name)?;
