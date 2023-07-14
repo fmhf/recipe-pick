@@ -1,9 +1,11 @@
 use clap::Parser;
 use colored::Colorize;
 use csv::ReaderBuilder;
+use reqwest::Response;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::HashMap;
+use std::time::Duration;
 use ulid::Ulid;
 
 const AUTH_ENDPOINT: &str = "https://auth-service.live-k8s.hellofresh.io";
@@ -54,7 +56,11 @@ async fn get_recipe_picklist(cli: &Cli) -> anyhow::Result<()> {
         anyhow::bail!("No codes found in csv file");
     }
 
-    let client = reqwest::Client::new();
+    let timeout = Duration::from_secs(90);
+    let client = reqwest::Client::builder()
+        .timeout(timeout)
+        .connect_timeout(timeout)
+        .build()?;
     let token = get_token(&client, &config).await?;
 
     get_picklists(&client, &token, &cli.market, &codes).await?;
@@ -81,7 +87,7 @@ async fn get_token(client: &reqwest::Client, config: &Config) -> anyhow::Result<
         .await?;
 
     if !resp.status().is_success() {
-        anyhow::bail!(resp.text().await?);
+        anyhow::bail!(response_error(resp).await?);
     }
 
     let token = resp.json::<Token>().await?;
@@ -134,7 +140,7 @@ async fn get_recipes(
         .await?;
 
     if !resp.status().is_success() {
-        anyhow::bail!(resp.text().await?);
+        anyhow::bail!(response_error(resp).await?);
     }
 
     let recipe_result = resp.json::<RecipeResult>().await?;
@@ -198,4 +204,12 @@ fn generate_picklist(recipes: &[Recipe]) -> anyhow::Result<()> {
     println!("Picklist generated: {}", file_name.green());
 
     Ok(())
+}
+
+async fn response_error(resp: Response) -> anyhow::Result<String> {
+    Ok(format!(
+        "status: {} text: {}",
+        resp.status(),
+        resp.text().await?
+    ))
 }
