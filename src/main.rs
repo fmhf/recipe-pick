@@ -56,7 +56,7 @@ async fn get_recipe_picklist(cli: &Cli) -> anyhow::Result<()> {
         anyhow::bail!("No codes found in csv file");
     }
 
-    let timeout = Duration::from_secs(90);
+    let timeout = Duration::from_secs(60);
     let client = reqwest::Client::builder()
         .timeout(timeout)
         .connect_timeout(timeout)
