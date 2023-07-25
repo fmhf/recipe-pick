@@ -103,6 +103,8 @@ struct RecipeResult {
 #[derive(Debug, Deserialize)]
 struct Recipe {
     title: String,
+    #[serde(rename = "unique_recipe_code")]
+    code: String,
     #[serde(rename = "cskus")]
     skus: Vec<Sku>,
 }
@@ -171,6 +173,7 @@ fn generate_picklist(recipes: &[Recipe]) -> anyhow::Result<()> {
     let mut wtr = csv::Writer::from_path(&file_name)?;
     wtr.write_record([
         "name",
+        "recipe_unique_code",
         "skus.mapping.value",
         "skus.mapping.name",
         "skus.mapping.picks.1",
@@ -182,9 +185,11 @@ fn generate_picklist(recipes: &[Recipe]) -> anyhow::Result<()> {
     ])?;
     for rec in recipes {
         let title = &rec.title;
+        let code = &rec.code;
         for sku in rec.skus.iter() {
             wtr.write_record([
                 title,
+                code,
                 &sku.code,
                 &sku.name,
                 &sku.picklist(1),
